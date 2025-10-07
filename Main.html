@@ -1,0 +1,324 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ToyForge 3D — Игрушки на 3D‑принтере</title>
+  <meta name="description" content="Современный минималистичный магазин 3D‑игрушек. Одностраничный сайт на чистом HTML/CSS/JS." />
+  <style>
+    :root{
+      --bg:#f8f7fb;          /* светлый фон */
+      --card:#ffffff;         /* фон карточек */
+      --text:#1f2430;         /* основной текст */
+      --muted:#6b7280;        /* вторичный текст */
+      --accent:#7c8cfa;       /* фиолетовый акцент (пастель) */
+      --tg:#29a9eb;           /* телеграм */
+      --pastel-1:#FCEFEF;     /* мягкие пастельные */
+      --pastel-2:#E8F7F0;
+      --pastel-3:#EEF1FF;
+      --shadow:0 10px 20px rgba(31,36,48,.08);
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0}
+    body{
+      font-family: system-ui,-apple-system,"Segoe UI",Roboto,Ubuntu,"Helvetica Neue",Arial,"Noto Sans",sans-serif;
+      background:var(--bg);
+      color:var(--text);
+      line-height:1.55;
+    }
+    .container{max-width:1120px;margin:0 auto;padding:16px 20px}
+
+    header{
+      position:sticky;top:0;z-index:10;
+      background:rgba(248,247,251,.85);
+      -webkit-backdrop-filter: blur(8px);backdrop-filter: blur(8px);
+      border-bottom:1px solid #ececf5;
+    }
+    .brand{display:flex;align-items:center;gap:12px;padding:8px 0}
+    .logo{width:36px;height:36px}
+    .brand h1{margin:0;font-size:1.25rem;font-weight:800;letter-spacing:.2px}
+    .tagline{margin:2px 0 0;color:var(--muted);font-size:.92rem}
+
+    /* фильтры */
+    .controls{display:flex;flex-wrap:wrap;gap:10px;margin:12px 0 6px}
+    .chip{padding:8px 12px;border-radius:999px;background:#fff;border:1px solid #e7e7ee;font-size:.9rem;cursor:pointer;transition:transform .2s ease, box-shadow .2s ease, background .2s ease}
+    .chip:hover{transform:translateY(-1px);box-shadow:var(--shadow)}
+    .chip.active{background:var(--accent);border-color:var(--accent);color:#fff}
+
+    /* сетка каталога */
+    .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:10px}
+    @media (min-width:960px){.grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:18px} .brand h1{font-size:1.35rem}}
+
+    /* карточки */
+    .card{background:var(--card);border-radius:16px;overflow:hidden;box-shadow:var(--shadow);display:flex;flex-direction:column;transition:transform .25s ease, box-shadow .25s ease}
+    .card:hover{transform:translateY(-4px);box-shadow:0 14px 30px rgba(31,36,48,.12)}
+    .thumb{aspect-ratio:4/3;display:grid;place-items:center;background:linear-gradient(135deg,var(--pastel-2),var(--pastel-3))}
+    .thumb img{max-width:90%;max-height:80%;object-fit:contain;filter:drop-shadow(0 6px 8px rgba(31,36,48,.12))}
+    .card-body{padding:14px 14px 16px}
+    .title{margin:0 0 6px;font-size:1rem;font-weight:800}
+    .desc{margin:.25rem 0 .6rem;color:var(--muted);font-size:.92rem}
+    .price{font-weight:900;margin:.2rem 0 .8rem}
+
+    .btn{width:100%;border:none;border-radius:12px;padding:10px 12px;font-weight:800;background:var(--accent);color:#fff;cursor:pointer;transition:transform .2s ease, box-shadow .2s ease}
+    .btn:hover{transform:translateY(-1px);box-shadow:0 10px 18px rgba(124,140,250,.25)}
+    .btn:active{transform:translateY(0)}
+    .btn.secondary{background:#fff;color:var(--text);border:1px solid #e7e7ee;box-shadow:none}
+
+    footer{margin-top:42px;border-top:1px dashed #e6e6f0}
+    footer .container{padding:22px 20px}
+    footer .contact{display:flex;flex-direction:column;gap:6px;color:var(--muted);font-size:.96rem}
+
+    /* плавающая кнопка Telegram */
+    .fab{position:fixed;right:18px;bottom:18px;width:56px;height:56px;border-radius:50%;background:var(--tg);display:grid;place-items:center;box-shadow:0 16px 28px rgba(41,169,235,.35);cursor:pointer;z-index:20;transition:transform .2s ease, box-shadow .2s ease}
+    .fab:hover{transform:translateY(-2px);box-shadow:0 20px 36px rgba(41,169,235,.45)}
+    .fab svg{width:26px;height:26px;fill:#fff}
+
+    /* лоадер */
+    .loader{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+    @media (min-width:960px){.loader{grid-template-columns:repeat(4,1fr);gap:18px}}
+    .skel-card{height:280px;border-radius:16px;background:linear-gradient(90deg,#f1f1f7 25%,#f7f7fc 37%,#f1f1f7 63%);background-size:400% 100%;animation:shine 1.1s infinite linear}
+    @keyframes shine{0%{background-position:100% 0}100%{background-position:-100% 0}}
+
+    /* модалка заказа */
+    .modal{position:fixed;inset:0;display:none;place-items:center;background:rgba(0,0,0,.35);z-index:50;padding:16px}
+    .modal[open]{display:grid}
+    .dialog{position:relative;max-width:540px;width:100%;background:#fff;border-radius:16px;box-shadow:0 20px 50px rgba(0,0,0,.2);padding:16px}
+    .dialog h3{margin:0 0 6px}
+    .dialog .row{display:flex;gap:10px;margin-top:14px}
+    .dialog textarea{width:100%;min-height:110px;border:1px solid #eaeaea;border-radius:12px;padding:10px;resize:vertical;font-family:inherit}
+    .dialog .actions{display:flex;gap:10px;justify-content:flex-end;margin-top:12px}
+    .dialog .btn{flex:1}
+    .close-x{position:absolute;right:10px;top:8px;background:transparent;border:none;font-size:22px;cursor:pointer}
+
+    .visually-hidden{position:absolute;left:-9999px}
+    /* гарантируем, что атрибут hidden реально скрывает блоки (например, loader с display:grid) */
+    [hidden]{display:none !important}
+    @media (prefers-reduced-motion:reduce){
+      .card,.btn,.chip,.fab{transition:none!important}
+      .loader .skel-card{animation:none}
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container">
+      <div class="brand" aria-label="ToyForge 3D">
+        <!-- минимальный логотип: изометрический куб -->
+        <svg class="logo" viewBox="0 0 64 64" aria-hidden="true" focusable="false">
+          <defs>
+            <linearGradient id="g1" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stop-color="#8bd3dd"/>
+              <stop offset="1" stop-color="#eef1ff"/>
+            </linearGradient>
+          </defs>
+          <g transform="translate(4,2)">
+            <polygon points="28,0 56,14 28,28 0,14" fill="url(#g1)"/>
+            <polygon points="56,14 56,42 28,56 28,28" fill="#cfd8ff"/>
+            <polygon points="28,28 28,56 0,42 0,14" fill="#dff6f2"/>
+          </g>
+        </svg>
+        <div>
+          <h1>ToyForge 3D</h1>
+          <div class="tagline">Фигурки, зверята и сувениры, напечатанные с любовью</div>
+        </div>
+      </div>
+      <!-- фильтры категорий -->
+      <div class="controls" id="filters" aria-label="Фильтр категорий"></div>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- лоадер -->
+    <div id="loader" class="loader" aria-live="polite" aria-busy="true"></div>
+    <!-- каталог -->
+    <section id="catalog" class="grid" hidden aria-live="polite"></section>
+  </main>
+
+  <footer>
+    <div class="container">
+      <div class="contact">
+        <strong>Контакты</strong>
+        <span>Telegram: <a id="footer-tg" href="#" target="_blank" rel="noopener">@YourShop</a></span>
+        <span>Email: hello@toyforge3d.store</span>
+        <span>Телефон: +40 712 345 678</span>
+        <span>© <span id="y"></span> ToyForge 3D</span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- плавающая кнопка Telegram -->
+  <a id="tg-fab" class="fab" href="#" target="_blank" rel="noopener" aria-label="Открыть чат в Telegram">
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M9.035 15.293 8.89 19.77c.403 0 .579-.173.79-.381l1.898-1.846 3.935 2.89c.721.398 1.232.189 1.429-.667l2.588-12.13.001-.001c.229-1.07-.387-1.49-1.095-1.23L3.57 10.13c-1.046.407-1.03.994-.178 1.26l4.34 1.355 10.083-6.363c.476-.3.909-.134.552.166z"/>
+    </svg>
+  </a>
+
+  <!-- модальное окно заказа -->
+  <div class="modal" id="order-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <div class="dialog">
+      <button class="close-x" id="modal-close" aria-label="Закрыть">×</button>
+      <h3 id="modal-title">Заказ товара</h3>
+      <p id="modal-product" class="desc"></p>
+      <label for="order-text" class="visually-hidden">Сообщение для Telegram</label>
+      <textarea id="order-text"></textarea>
+      <div class="actions">
+        <button class="btn secondary" id="copy-btn" type="button">Скопировать</button>
+        <a class="btn" id="open-tg" target="_blank" rel="noopener">Открыть Telegram</a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /* === НАСТРОЙКИ МАГАЗИНА ================================ */
+    const TELEGRAM_USERNAME = 'YourShop'; // ← замените на свой username (без @)
+    const TELEGRAM_URL = `https://t.me/${TELEGRAM_USERNAME}`;
+
+    /* === ДАННЫЕ ТОВАРОВ (пример) ============================ */
+    // Для картинок используем лёгкие SVG-плейсхолдеры с эмодзи.
+    function svgPlaceholder(emoji, c1 = '#E8F7F0', c2 = '#EEF1FF'){
+      const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='600' height='450' viewBox='0 0 600 450'>
+        <defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='${c1}'/><stop offset='1' stop-color='${c2}'/></linearGradient></defs>
+        <rect width='600' height='450' fill='url(#g)'/>
+        <g transform='translate(300 225)'>
+          <rect x='-90' y='-90' width='180' height='180' rx='24' fill='rgba(255,255,255,.85)'/>
+          <text x='0' y='18' font-size='96' text-anchor='middle'>${emoji}</text>
+        </g>
+      </svg>`;
+      return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
+    }
+
+    const products = [
+      { id:'A1001', name:'Медвежонок Поли', price:119, currency:'EUR', category:'Животные', desc:'Фигурка медведя, высота 8 см. Отлично шлифуется и окрашивается.', image: svgPlaceholder('🧸','#EAF7F3','#EEF1FF') },
+      { id:'A1002', name:'Котик Неко', price:99, currency:'EUR', category:'Животные', desc:'Мини-манэки-неко с подставкой. Высота 6 см.', image: svgPlaceholder('🐱','#FCEFEF','#EEF1FF') },
+      { id:'V2001', name:'Ретро‑авто', price:149, currency:'EUR', category:'Транспорт', desc:'Сборная модель ретро‑купе. Масштаб ~1:32.', image: svgPlaceholder('🚗','#E8F7F0','#F3F0FF') },
+      { id:'V2002', name:'Космокорабль', price:139, currency:'EUR', category:'Транспорт', desc:'Футуристичный корабль на подставке.', image: svgPlaceholder('🚀','#EEF1FF','#EAF7F3') },
+      { id:'F3001', name:'Робо‑друг', price:129, currency:'EUR', category:'Фигурки', desc:'Милый робот‑маскот, высота 9 см.', image: svgPlaceholder('🤖','#F3F0FF','#EAF7F3') },
+      { id:'F3002', name:'Рыцарь‑чиби', price:109, currency:'EUR', category:'Фигурки', desc:'Стиллизованный рыцарь. Высота 7 см.', image: svgPlaceholder('🛡️','#EAF7F3','#FCEFEF') },
+      { id:'G4001', name:'Тетрис‑брелок', price:39,  currency:'EUR', category:'Гаджеты', desc:'Пазл‑брелок из 7 деталей. Размер 4×4 см.', image: svgPlaceholder('🧩','#EEF1FF','#E8F7F0') },
+      { id:'G4002', name:'Динозавр‑клип', price:59,  currency:'EUR', category:'Гаджеты', desc:'Зажим для кабелей в виде динозавра.', image: svgPlaceholder('🦖','#FCEFEF','#EAF7F3') },
+    ];
+
+    /* === УТИЛИТЫ ============================================ */
+    const fmt = new Intl.NumberFormat('ru-RU',{style:'currency',currency:'EUR'});
+    function priceFormat(p){try{return new Intl.NumberFormat('ru-RU',{style:'currency',currency:'EUR'}).format(p)}catch{ return fmt.format(p) }}
+
+    function uniqueCategories(list){
+      return ['Все', ...Array.from(new Set(list.map(p=>p.category)))];
+    }
+
+    function createEl(tag, attrs={}, children=[]) {
+      const el = document.createElement(tag);
+      Object.entries(attrs).forEach(([k,v])=>{
+        if(k==='class') el.className = v;
+        else if(k==='html') el.innerHTML = v;
+        else if(k.startsWith('data-')) el.setAttribute(k, v);
+        else if(k==='hidden') v? el.setAttribute('hidden',''): el.removeAttribute('hidden');
+        else el.setAttribute(k,v);
+      });
+      children.forEach(ch => el.appendChild(ch));
+      return el;
+    }
+
+    /* === ОТРИСОВКА ========================================== */
+    const filtersBox = document.getElementById('filters');
+    const catalog   = document.getElementById('catalog');
+    const loader    = document.getElementById('loader');
+
+    function renderLoader(count=8){
+      loader.innerHTML = '';
+      for(let i=0;i<count;i++) loader.appendChild(createEl('div',{class:'skel-card'}));
+    }
+
+    function renderFilters(){
+      const cats = uniqueCategories(products);
+      filtersBox.innerHTML = '';
+      cats.forEach((c,i)=>{
+        const chip = createEl('button',{class:'chip'+(i===0?' active':''), 'data-filter':c, type:'button'});
+        chip.textContent = c;
+        chip.addEventListener('click',()=>{
+          document.querySelectorAll('.chip').forEach(ch=>ch.classList.remove('active'));
+          chip.classList.add('active');
+          const list = (c==='Все') ? products : products.filter(p=>p.category===c);
+          renderProducts(list);
+        });
+        filtersBox.appendChild(chip);
+      });
+    }
+
+    function productCard(p){
+      const card = createEl('article',{class:'card', id:`product-${p.id}`});
+      const img  = createEl('img',{src:p.image, alt:`${p.name} — 3D‑игрушка`, loading:'lazy'});
+      const thumb= createEl('div',{class:'thumb'},[img]);
+
+      const title= createEl('h3',{class:'title'}); title.textContent=p.name;
+      const desc = createEl('p',{class:'desc'});  desc.textContent=p.desc;
+      const price= createEl('div',{class:'price'}); price.textContent = priceFormat(p.price);
+
+      const btn  = createEl('button',{class:'btn order-btn', type:'button', 'data-id':p.id}); btn.textContent='Заказать';
+      btn.addEventListener('click',()=>openOrderDialog(p));
+
+      const body = createEl('div',{class:'card-body'},[title,desc,price,btn]);
+      card.append(thumb, body);
+      return card;
+    }
+
+    function renderProducts(list){
+      catalog.innerHTML = '';
+      list.forEach(p=> catalog.appendChild(productCard(p)) );
+      loader.setAttribute('aria-busy','false');
+      loader.hidden = true;
+      catalog.hidden = false;
+    }
+
+    /* === ЗАКАЗ / ТЕЛЕГРАМ =================================== */
+    const modal = document.getElementById('order-modal');
+    const modalClose = document.getElementById('modal-close');
+    const orderText = document.getElementById('order-text');
+    const modalProduct = document.getElementById('modal-product');
+    const openTg = document.getElementById('open-tg');
+    const copyBtn = document.getElementById('copy-btn');
+
+    function openOrderDialog(p){
+      const msg = `Здравствуйте! Хочу заказать: ${p.name} (ID ${p.id}).\nЦена: ${priceFormat(p.price)}.\nКоличество: 1.\nМой город: ____.\nСпособ доставки: ____.\nКомментарии/цвет: ____.`;
+      orderText.value = msg;
+      modalProduct.textContent = `${p.name} • ${priceFormat(p.price)}`;
+      // Попытка передать текст сразу в Telegram (не везде работает). Оставляем копирование как запасной вариант.
+      openTg.href = `${TELEGRAM_URL}?text=${encodeURIComponent(msg)}`;
+      modal.setAttribute('open','');
+      orderText.focus();
+    }
+
+    function closeModal(){ modal.removeAttribute('open'); }
+
+    modal.addEventListener('click',(e)=>{ if(e.target===modal) closeModal(); });
+    modalClose.addEventListener('click', closeModal);
+    document.addEventListener('keydown',(e)=>{ if(e.key==='Escape' && modal.hasAttribute('open')) closeModal(); });
+
+    copyBtn.addEventListener('click', async ()=>{
+      try{ await navigator.clipboard.writeText(orderText.value); copyBtn.textContent='Скопировано!'; setTimeout(()=>copyBtn.textContent='Скопировать',1200); }
+      catch{ alert('Скопируйте текст вручную.'); }
+    });
+
+    // Плавающая и футерные ссылки на Telegram
+    document.getElementById('tg-fab').href = TELEGRAM_URL;
+    document.getElementById('footer-tg').href = TELEGRAM_URL;
+    document.getElementById('footer-tg').textContent = '@'+TELEGRAM_USERNAME;
+
+    // год в футере
+    document.getElementById('y').textContent = new Date().getFullYear();
+
+    /* === ИНИЦИАЛИЗАЦИЯ ===================================== */
+    function init(){
+      renderLoader(8);
+      renderFilters();
+      // имитируем загрузку для показа лоадера
+      setTimeout(()=>renderProducts(products), 650);
+    }
+    if(document.readyState === 'loading'){
+      document.addEventListener('DOMContentLoaded', init);
+    } else {
+      init();
+    }
+  </script>
+</body>
+</html>
